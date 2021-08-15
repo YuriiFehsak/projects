@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bb537ab0-29df-4fd5-8f6b-c45774f09266" name="Changes" comment="bot">
-      <change afterPath="$PROJECT_DIR$/BotPrivat/config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BotPrivat/privatmain.py" afterDir="false" />
+    <list default="true" id="bb537ab0-29df-4fd5-8f6b-c45774f09266" name="Changes" comment="privatcurrent">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -172,7 +170,14 @@
       <option name="project" value="LOCAL" />
       <updated>1629030613608</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="privatcurrent">
+      <created>1629039326726</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1629039326726</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -185,9 +190,11 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="bot" />
-    <option name="LAST_COMMIT_MESSAGE" value="bot" />
+    <MESSAGE value="privatcurrent" />
+    <option name="LAST_COMMIT_MESSAGE" value="privatcurrent" />
   </component>
 </project>
