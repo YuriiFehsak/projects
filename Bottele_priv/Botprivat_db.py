@@ -17,14 +17,15 @@ async def on_message(message: types.Message):
                                                  f" Давай поглянемо на курс: \n"
                                                  f" /create - Створити базу даних \n"
                                                  f" /insert - Внесення в базу даних \n"
-                                                 f" /select - Вибрати історію курсів!")
+                                                 f" /select - Вибрати історію курсів!\n"
+                                                 f" /delete - Видалення історії курсів")
     await sleep(1)
 
 
 @dp.message_handler(commands=['create'])
 async def create_db(message: types.Message):
     try:
-        connect = psycopg2.connect(host="localhost", database="Yurii", user="postgres", password="EvevnW44")
+        connect = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="mpmp")
         cursor = connect.cursor()
         cursor.execute("""CREATE TABLE IF NOT EXISTS currency(
                 id SERIAL,
@@ -38,15 +39,15 @@ async def create_db(message: types.Message):
         connect.close()
     except Error as e:
         print(f"Error while connect to DATABASE {e}")
-    cursor = await connect.cursor()
+        cursor = await connect.cursor()
 
 @dp.message_handler(commands=['insert'])
 async def insert_db(message: types.Message):
     try:
         while True:
             currency = requests.get(URL).json()
-            await asyncio.sleep(4)
-            connect = psycopg2.connect(host="localhost", database="Yurii", user="postgres", password="EvevnW44")
+
+            connect = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="mpmp")
             cursor = connect.cursor()
             cursor.execute(
                 f"INSERT INTO currency (ccy, buy_price, sale_price) VALUES ('{currency[0]['ccy']}','{currency[0]['buy']}','{currency[0]['sale']}');")
@@ -56,45 +57,56 @@ async def insert_db(message: types.Message):
                 f"INSERT INTO currency (ccy, buy_price, sale_price) VALUES ('{currency[2]['ccy']}','{currency[2]['buy']}','{currency[2]['sale']}');")
             cursor.execute(
                 f"INSERT INTO currency (ccy, buy_price, sale_price) VALUES ('{currency[3]['ccy']}','{currency[3]['buy']}','{currency[3]['sale']}');")
-
+            await asyncio.sleep(20)
             connect.commit()
             cursor.close()
             connect.close()
+            await bot.send_message(message.from_user.id,
+                                   f" База даних наповнюється......) ")
     except Error as e:
         print(f"Error while connect to DATABASE {e}")
-    cursor = await connect.cursor()
+        cursor = await connect.cursor()
 
 @dp.message_handler(commands=['select'])
 async def select_db(message: types.Message):
     try:
-        connect = psycopg2.connect(host="localhost", database="Yurii", user="postgres", password="EvevnW44")
+        connect = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="mpmp")
         cursor = connect.cursor()
-        cursor.execute("SELECT ccy, buy_price, sale_price, time FROM currency;")
-        cursor.fetchone()
-        result = cursor.fetchone()
-        await bot.send_message(message.from_user.id,
-                               f"Дані от такі:  Ccy: '{result[0]}', buy_price: {result[1]}, sale_price: {result[2]}, time: {result[3]}")
+        cursor.execute("SELECT ccy, buy_price, sale_price, time FROM currency ORDER BY id DESC LIMIT 4;")
+        result = cursor.fetchall()
+        for i in result:
+            await bot.send_message(message.from_user.id,
+                               f" Валюта: {i[0]}\n"
+                               f" Курс покупки: {i[1]}\n"
+                               f" Курс продажі: {i[2]}\n"
+                               f" Зафіксований час: {i[3]}")
         connect.commit()
         cursor.close()
         connect.close()
     except Error as e:
         print(f"Error while connect to DATABASE {e}")
-    cursor = await connect.cursor()
+        cursor = await connect.cursor()
 
 @dp.message_handler(commands=['delete'],)
 async def delete_db(message: types.Message):
-    try:
         await bot.send_message(message.from_user.id,
-                               f" Для того щоб видалити вкажи номер id, наприклад (id=1,2 ....)")
-        connect = psycopg2.connect(host="localhost", database="Yurii", user="postgres", password="EvevnW44")
+                               f" Для того щоб очитити дані таблиці, більші ніж за 2 години введи (/delete_old) ")
+        await sleep(1)
+
+@dp.message_handler(commands=['delete_old'],)
+async def delete_db(message: types.Message):
+    try:
+        connect = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="mpmp")
         cursor = connect.cursor()
-        cursor.execute(f"DELETE FROM currency WHERE id=2;")
+        cursor.execute(f"DELETE FROM currency WHERE id NOT IN (SELECT id FROM currency ORDER BY id DESC LIMIT 4);")
         connect.commit()
         cursor.close()
         connect.close()
+        await bot.send_message(message.from_user.id,
+                               f" В базі даних залишилися тільки найновіші курси) ")
     except Error as e:
         print(f"Error while connect to DATABASE {e}")
-    cursor = await connect.cursor()
+        cursor = await connect.cursor()
 
 
 if __name__ == '__main__':
