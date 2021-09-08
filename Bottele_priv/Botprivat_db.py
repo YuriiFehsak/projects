@@ -74,12 +74,27 @@ async def select_db(message: types.Message):
         cursor = connect.cursor()
         cursor.execute("SELECT ccy, buy_price, sale_price, time FROM currency ORDER BY id DESC LIMIT 4;")
         result = cursor.fetchall()
+        text_massage = ''
         for i in result:
-            await bot.send_message(message.from_user.id,
-                               f" Валюта: {i[0]}\n"
-                               f" Курс покупки: {i[1]}\n"
-                               f" Курс продажі: {i[2]}\n"
-                               f" Зафіксований час: {i[3]}")
+            massage =   f" Валюта: {i[0]}\n"\
+                        f" Курс покупки: {i[1]}\n"\
+                        f" Курс продажі: {i[2]}\n"\
+                        f" Зафіксований час: {i[3]}\n"
+            text_massage = text_massage + massage
+
+
+
+
+
+
+
+
+
+
+
+
+        await bot.send_message(message.from_user.id, text_massage)
+
         connect.commit()
         cursor.close()
         connect.close()
