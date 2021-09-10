@@ -9,7 +9,16 @@ loop = asyncio.get_event_loop()
 URL = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5'
 bot = Bot('1904287315:AAEgT2qs7fEMHPY8_3Jw0pr1C6hQ0Ok3VHo')
 dp = Dispatcher(bot, loop=loop)
+currency = requests.get(URL).json()
 
+async def connect_db():
+    connect = None
+    try:
+        connect = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="mpmp")
+        return connect
+    except Error as e:
+        print(f"Error while connect to DATABASE {e}")
+    cursor = connect.cursor()
 
 @dp.message_handler(commands=['start'])
 async def on_message(message: types.Message):
@@ -21,11 +30,10 @@ async def on_message(message: types.Message):
                                                  f" /delete - Видалення історії курсів")
     await sleep(1)
 
-
 @dp.message_handler(commands=['create'])
 async def create_db(message: types.Message):
     try:
-        connect = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="mpmp")
+        connect = await connect_db()
         cursor = connect.cursor()
         cursor.execute("""CREATE TABLE IF NOT EXISTS currency(
                 id SERIAL,
@@ -37,6 +45,7 @@ async def create_db(message: types.Message):
         connect.commit()
         cursor.close()
         connect.close()
+        await bot.send_message(message.from_user.id, f'База даних створена!')
     except Error as e:
         print(f"Error while connect to DATABASE {e}")
         cursor = await connect.cursor()
@@ -45,19 +54,16 @@ async def create_db(message: types.Message):
 async def insert_db(message: types.Message):
     try:
         while True:
-            currency = requests.get(URL).json()
-
-            connect = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="mpmp")
+            connect = await connect_db()
             cursor = connect.cursor()
+            massiv = ''
+            for values in currency:
+                massiv += f"('{values['ccy']}', '{values['buy']}', '{values['sale']}'),"
+            mass = massiv.replace(',',';')
+            insert = mass.replace(';',',',11)
             cursor.execute(
-                f"INSERT INTO currency (ccy, buy_price, sale_price) VALUES ('{currency[0]['ccy']}','{currency[0]['buy']}','{currency[0]['sale']}');")
-            cursor.execute(
-                f"INSERT INTO currency (ccy, buy_price, sale_price) VALUES ('{currency[1]['ccy']}','{currency[1]['buy']}','{currency[1]['sale']}');")
-            cursor.execute(
-                f"INSERT INTO currency (ccy, buy_price, sale_price) VALUES ('{currency[2]['ccy']}','{currency[2]['buy']}','{currency[2]['sale']}');")
-            cursor.execute(
-                f"INSERT INTO currency (ccy, buy_price, sale_price) VALUES ('{currency[3]['ccy']}','{currency[3]['buy']}','{currency[3]['sale']}');")
-            await asyncio.sleep(20)
+                f"INSERT INTO currency (ccy, buy_price, sale_price) VALUES {insert}")
+            await asyncio.sleep(5)
             connect.commit()
             cursor.close()
             connect.close()
@@ -70,7 +76,7 @@ async def insert_db(message: types.Message):
 @dp.message_handler(commands=['select'])
 async def select_db(message: types.Message):
     try:
-        connect = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="mpmp")
+        connect = await connect_db()
         cursor = connect.cursor()
         cursor.execute("SELECT ccy, buy_price, sale_price, time FROM currency ORDER BY id DESC LIMIT 4;")
         result = cursor.fetchall()
@@ -81,20 +87,7 @@ async def select_db(message: types.Message):
                         f" Курс продажі: {i[2]}\n"\
                         f" Зафіксований час: {i[3]}\n"
             text_massage = text_massage + massage
-
-
-
-
-
-
-
-
-
-
-
-
         await bot.send_message(message.from_user.id, text_massage)
-
         connect.commit()
         cursor.close()
         connect.close()
@@ -111,7 +104,7 @@ async def delete_db(message: types.Message):
 @dp.message_handler(commands=['delete_old'],)
 async def delete_db(message: types.Message):
     try:
-        connect = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="mpmp")
+        connect = await connect_db()
         cursor = connect.cursor()
         cursor.execute(f"DELETE FROM currency WHERE id NOT IN (SELECT id FROM currency ORDER BY id DESC LIMIT 4);")
         connect.commit()
@@ -122,7 +115,6 @@ async def delete_db(message: types.Message):
     except Error as e:
         print(f"Error while connect to DATABASE {e}")
         cursor = await connect.cursor()
-
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
